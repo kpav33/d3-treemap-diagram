@@ -1,6 +1,6 @@
 # D3 Treemap Diagram
 
-You can see the project live here: [https://kpav33.github.io/d3-choropleth-map/](https://kpav33.github.io/d3-choropleth-map/).
+You can see the project live here: [https://kpav33.github.io/d3-treemap-diagram/](https://kpav33.github.io/d3-treemap-diagram/).
 
 App was designed based on the freeCodeCamp's D3 Treemap Diagram project user stories.
 
