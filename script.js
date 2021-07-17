@@ -6,17 +6,24 @@ let values;
 let svg = d3.select("#root");
 let tooltip = d3.select("#tooltip");
 
+// Format values in tooltip
+let formatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
 function drawMap() {
+  // Declare hierachy
   let hierarchy = d3
     .hierarchy(values, (node) => node.children)
     .sum((node) => node.value)
     .sort((a, b) => b.value - a.value);
 
-  // Tests don't pass with width greater than 1000?
-  let createTreeMap = d3.treemap().size([1000, 600]);
-
+  // Create treemap with padding
+  let createTreeMap = d3.treemap().size([1000, 600]).padding(1);
   createTreeMap(hierarchy);
 
+  // Create group element for each movie and add a tooltip to it
   let movies = hierarchy.leaves();
   console.log(movies);
   let tile = svg
@@ -24,63 +31,60 @@ function drawMap() {
     .data(movies)
     .enter()
     .append("g")
-    .attr("transform", (d) => `translate(${d.x0}, ${d.y0})`);
+    .attr("class", "g-tile")
+    .attr("transform", (d) => `translate(${d.x0}, ${d.y0})`)
+    .on("mouseover", (d) => {
+      let value = d.data.value;
+      tooltip
+        .attr("data-value", (d) => value)
+        .style("left", d3.event.pageX + 25 + "px")
+        .style("top", d3.event.pageY - 25 + "px")
+        .style("visibility", "visible")
+        .text(
+          `${d.data.name} | ${d.data.category} | Revenue: ${formatter.format(
+            d.data.value
+          )}`
+        );
+    })
+    .on("mouseout", (d) => tooltip.style("visibility", "hidden"));
 
+  // Append rect element to each group and change color depending on its category value
   tile
     .append("rect")
     .attr("class", "tile")
     .attr("fill", (d) => {
-      //console.log(d);
       let category = d.data.category;
-      if (category === "Action") return "red";
-      if (category === "Adventure") return "tomato";
-      if (category === "Animation") return "lightgray";
-      if (category === "Biography") return "green";
-      if (category === "Comedy") return "blue";
-      if (category === "Drama") return "yellow";
-      if (category === "Family") return "cyan";
+      if (category === "Action") return "#6388b6";
+      if (category === "Adventure") return "#ffae11";
+      if (category === "Animation") return "#f06e67";
+      if (category === "Biography") return "#8bc2cb";
+      if (category === "Comedy") return "#53ad87";
+      if (category === "Drama") return "#c3bc29";
+      if (category === "Family") return "#bc7594";
     })
     .attr("data-name", (d) => d.data.name)
     .attr("data-category", (d) => d.data.category)
     .attr("data-value", (d) => d.data.value)
     .attr("width", (d) => d.x1 - d.x0)
-    .attr("height", (d) => d.y1 - d.y0)
-    .on("mouseover", (d) => {
-      let value = d.data.value;
-      tooltip
-        .attr("data-value", (d) => value)
-        .style("left", d3.event.pageX + 15 + "px")
-        .style("top", d3.event.pageY - 15 + "px")
-        .style("visibility", "visible")
-        .text("OK");
-    })
-    .on("mouseout", (d) => tooltip.style("visibility", "hidden"));
-  /*
-  tile
-    .append("text")
-    .text((d) => d.data.name)
-    .attr("x", "5")
-    .attr("y", "20");*/
+    .attr("height", (d) => d.y1 - d.y0);
 
+  // Append movie title as text to each tile
   tile
     .append("text")
     .attr("class", "tile-text")
     .selectAll("tspan")
-    .data(function (d) {
-      return d.data.name.split(/(?=[A-Z][^A-Z])/g);
-    })
+    .data((d) => d.data.name.split(/(?=[A-Z][^A-Z])/g))
     .enter()
     .append("tspan")
     .attr("x", 3)
     .attr("y", function (d, i) {
-      return 13 + i * 12;
+      return 13 + i * 13;
     })
     .style("font-size", "13px")
-    .text(function (d) {
-      return d;
-    });
+    .text((d) => d);
 }
 
+// Fetch data
 fetch(url)
   .then((response) => response.json())
   .then((data) => {
